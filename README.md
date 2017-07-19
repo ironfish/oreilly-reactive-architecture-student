@@ -1,4 +1,4 @@
-## Oreilly Reactive Architecture Course
+## O'Reilly Reactive Architecture Course
 
 ---
 
@@ -25,9 +25,9 @@ We recommend using the following tools:
 This course is best suited for individuals that have knowledge of Java. Also, we need access to the internet and a computer with the following software installed:
 
 - Unix compatible shell
-- JVM 1.7 or higher
-- Scala 2.11 or higher
-- Sbt 0.13.8 or higher
+- JVM 1.8 or higher
+- Scala 2.12.2 or higher
+- Sbt 0.13.15 or higher
 
 ---
 
@@ -56,7 +56,7 @@ Java HotSpot(TM) 64-Bit Server VM (build 25.112-b16, mixed mode)
 
 ---
 
-### Scala 2.11 or Higher
+### Scala 2.12 or Higher
 
 If you are running OSX and a [Homebrew](http://brew.sh/) user, from a terminal run:
 
@@ -68,12 +68,12 @@ Otherwise follow the [setup instruction](http://www.scala-lang.org/documentation
 
 ```bash
 $ scala -version
-Scala code runner version 2.11.8 -- Copyright 2002-2013, LAMP/EPFL
+Scala code runner version 2.12.2 -- Copyright 2002-2017, LAMP/EPFL and Lightbend, Inc.
 ```
 
 ---
 
-### Sbt 0.13.13 or Higher
+### sbt 0.13.15 or Higher
 
 If you are running OSX and a [Homebrew](http://brew.sh/) user, from a terminal run:
 
@@ -84,17 +84,18 @@ $ brew install sbt
 Otherwise follow the [setup instruction](http://www.scala-sbt.org/0.13/docs/index.html) to download and install. Once the installation is complete, verify the installation by running the following command in a terminal session:
 
 ```bash
-$ sbt -version
-sbt launcher 0.13.13
+$ sbt sbtVersion
+...
+[info] 0.13.15
 ```
 
 ---
 
-## Simple Build Tool
+## sbt
 
 ---
 
-### Make Yourself Familiar with Sbt
+### Make Yourself Familiar with sbt
 
 - Read the first chapters of the [Getting Started Guide](http://www.scala-sbt.org/release/tutorial/index.html)
 - Starting `sbt` takes you to a **interactive session**
@@ -211,7 +212,7 @@ Follow these instructions if you want to use Eclipse:
 
 Follow these instructions if you want to use IntelliJ IDEA:
 
-- Download and install the latest version of [IntelliJ 2016.3](https://www.jetbrains.com/idea/download/) for your platform
+- Download and install the latest version of [IntelliJ 2017.2](https://www.jetbrains.com/idea/download/) for your platform
 - In Intellij, import the `coffee-house` project
 ---
 
@@ -250,6 +251,3 @@ Our mission is to keep the Akka Coffee House healthy, so make sure you have the 
 14. Exercise 14 > Self Healing
 15. Exercise 15 > Detect Bottleneck
 16. Exercise 16 > Use Router
-17. Exercise 17 > Config Dispatcher
-18. Exercise 18 > Modify Behavior
-19. Exercise 19 > Remoting
