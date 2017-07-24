@@ -72,9 +72,8 @@ public class CoffeeHouseApp implements Terminal {
         Await.ready(system.whenTerminated(), Duration.Inf());
     }
 
-    // @todo createCoffeeHouse factory method
     protected ActorRef createCoffeeHouse() {
-        return system.actorOf(CoffeeHouse.props(), "coffee-house");
+        return system.deadLetters();
     }
 
     private void commandLoop() throws IOException {

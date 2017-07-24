@@ -3,8 +3,10 @@
  */
 package com.lightbend.training.coffeehouse;
 
+import akka.actor.AbstractLoggingActor;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import akka.actor.Props;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import scala.concurrent.Await;
@@ -35,6 +37,7 @@ public class CoffeeHouseApp implements Terminal {
         this.system = system;
         log = Logging.getLogger(system, getClass().getName());
         coffeeHouse = createCoffeeHouse();
+        system.actorOf(printerProps(coffeeHouse));
     }
 
     public static void main(final String[] args) throws Exception {
@@ -62,6 +65,19 @@ public class CoffeeHouseApp implements Terminal {
         });
     }
 
+    private static Props printerProps(ActorRef coffeeHouse) {
+        return Props.create(AbstractLoggingActor.class, () -> new AbstractLoggingActor() {
+            @Override
+            public Receive createReceive() {
+                return receiveBuilder().matchAny(o -> log().info(o.toString())).build();
+            }
+
+            {
+                coffeeHouse.tell("Brew Coffee", getSelf());
+            }
+        });
+    }
+
     private void run() throws IOException, TimeoutException, InterruptedException {
         log.warning(
                 String.format("{} running%nEnter commands into the terminal, e.g. 'q' or 'quit'"),
@@ -79,7 +95,6 @@ public class CoffeeHouseApp implements Terminal {
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         while (true) {
             TerminalCommand tc = Terminal.create(in.readLine());
-            // todo When handling `TerminalCommand.Guest`, send `CreateGuest` to `CoffeeHouse`.
             if (tc instanceof TerminalCommand.Guest) {
                 TerminalCommand.Guest tcg = (TerminalCommand.Guest) tc;
                 createGuest(tcg.count, tcg.coffee, tcg.maxCoffeeCount);
@@ -96,9 +111,6 @@ public class CoffeeHouseApp implements Terminal {
     }
 
     protected void createGuest(int count, Coffee coffee, int maxCoffeeCount) {
-        for (int i = 0; i < count; i++) {
-            coffeeHouse.tell(CoffeeHouse.CreateGuest.Instance, ActorRef.noSender());
-        }
     }
 
     protected void getStatus() {

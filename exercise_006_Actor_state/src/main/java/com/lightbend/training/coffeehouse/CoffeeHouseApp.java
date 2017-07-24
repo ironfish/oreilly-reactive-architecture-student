@@ -110,11 +110,10 @@ public class CoffeeHouseApp implements Terminal {
             }
         }
     }
-
-    // todo Account for the `favoriteCoffee` parameter required by the `CreateGuest` message.
+    
     protected void createGuest(int count, Coffee coffee, int maxCoffeeCount) {
         for (int i = 0; i < count; i++) {
-            coffeeHouse.tell(new CoffeeHouse.CreateGuest(coffee), ActorRef.noSender());
+            coffeeHouse.tell(CoffeeHouse.CreateGuest.Instance, ActorRef.noSender());
         }
     }
 
