@@ -5,34 +5,25 @@
 package com.lightbend.training.coffeehouse;
 
 import akka.actor.AbstractLoggingActor;
-import akka.actor.ActorRef;
 import akka.actor.Props;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class Waiter extends AbstractLoggingActor {
 
-    // todo Add a reference to the `Barista` actor.
-    private ActorRef barista;
-
-    public Waiter(ActorRef barista) {
-        this.barista = barista;
+    public Waiter() {
     }
 
     @Override
     public Receive createReceive() {
         return receiveBuilder().
-                // todo Instead of serving coffee immediately, defer to the `Barista` for preparation.
                 match(ServeCoffee.class, serveCoffee ->
-                        this.barista.tell(new Barista.PrepareCoffee(serveCoffee.coffee, sender()), self())
-                ).
-                match(Barista.CoffeePrepared.class, coffeePrepared ->
-                        coffeePrepared.guest.tell(new CoffeeServed(coffeePrepared.coffee), self())
+                        sender().tell(new CoffeeServed(serveCoffee.coffee), self())
                 ).build();
     }
 
-    public static Props props(ActorRef barista) {
-        return Props.create(Waiter.class, () -> new Waiter(barista));
+    public static Props props() {
+        return Props.create(Waiter.class, Waiter::new);
     }
 
     public static final class ServeCoffee {

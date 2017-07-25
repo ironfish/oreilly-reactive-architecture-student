@@ -35,10 +35,6 @@ public class CoffeeHouseApp implements Terminal {
         this.system = system;
         log = Logging.getLogger(system, getClass().getName());
         coffeeHouse = createCoffeeHouse();
-
-        // @todo send "Brew Coffee" to coffeeHouse
-        // @todo use ActorRef.noSender() as the sender
-        coffeeHouse.tell("Brew Coffee", ActorRef.noSender());
     }
 
     public static void main(final String[] args) throws Exception {
