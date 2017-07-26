@@ -12,27 +12,25 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class Waiter extends AbstractLoggingActor {
 
-    private ActorRef coffeeHouse;
+    private ActorRef barista;
 
-    // todo Rename the `barista` parameter to `coffeeHouse`.
-    public Waiter(ActorRef coffeeHouse) {
-        this.coffeeHouse = coffeeHouse;
+    public Waiter(ActorRef barista) {
+        this.barista = barista;
     }
 
     @Override
     public Receive createReceive() {
         return receiveBuilder().
                 match(ServeCoffee.class, serveCoffee ->
-                        // todo Change the behavior to reflect using `CoffeeHouse`.
-                        this.coffeeHouse.tell(new CoffeeHouse.ApproveCoffee(serveCoffee.coffee, sender()), self())
+                        this.barista.tell(new Barista.PrepareCoffee(serveCoffee.coffee, sender()), self())
                 ).
                 match(Barista.CoffeePrepared.class, coffeePrepared ->
                         coffeePrepared.guest.tell(new CoffeeServed(coffeePrepared.coffee), self())
                 ).build();
     }
 
-    public static Props props(ActorRef coffeeHouse) {
-        return Props.create(Waiter.class, () -> new Waiter(coffeeHouse));
+    public static Props props(ActorRef barista) {
+        return Props.create(Waiter.class, () -> new Waiter(barista));
     }
 
     public static final class ServeCoffee {

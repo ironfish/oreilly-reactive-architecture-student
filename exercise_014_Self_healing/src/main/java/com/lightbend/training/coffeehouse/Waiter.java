@@ -20,7 +20,6 @@ public class Waiter extends AbstractLoggingActor {
 
     private int complaintCount;
 
-
     public Waiter(ActorRef coffeeHouse, ActorRef barista, int maxComplaintCount) {
         this.coffeeHouse = coffeeHouse;
         this.barista = barista;
@@ -36,9 +35,8 @@ public class Waiter extends AbstractLoggingActor {
                 match(Barista.CoffeePrepared.class, coffeePrepared ->
                         coffeePrepared.guest.tell(new CoffeeServed(coffeePrepared.coffee), self())
                 ).
-                // todo Providing the `Waiter` actors supervisor with all the necessary information.
                 match(Complaint.class, complaint -> complaintCount == this.maxComplaintCount, complaint -> {
-                    throw new FrustratedException(complaint.coffee, sender());
+                    throw new FrustratedException();
                 }).
                 match(Complaint.class, complaint -> {
                     complaintCount++;
@@ -53,14 +51,8 @@ public class Waiter extends AbstractLoggingActor {
     public static final class FrustratedException extends IllegalStateException {
         static final long serialVersionUID = 1;
 
-        public final Coffee coffee;
-
-        public final ActorRef guest;
-
-        public FrustratedException(final Coffee coffee, final ActorRef guest) {
+        public FrustratedException() {
             super("Too many complaints!");
-            this.coffee = coffee;
-            this.guest = guest;
         }
     }
 

@@ -27,14 +27,6 @@ public class CoffeeHouse extends AbstractLoggingActor {
                     context().system().settings().config().getDuration(
                             "coffee-house.guest.finish-coffee-duration", MILLISECONDS), MILLISECONDS);
 
-    // todo For `accuracy` use a configuration value with key `coffee-house.barista.accuracy`.
-    private final int baristaAccuracy =
-            context().system().settings().config().getInt("coffee-house.barista.accuracy");
-
-    // todo For `maxComplaintCount` use a configuration value with key `coffee-house.waiter.max-complaint-count`.
-    private final int waiterMaxComplaintCount =
-            context().system().settings().config().getInt("coffee-house.waiter.max-complaint-count");
-
     private final ActorRef barista =
             createBarista();
 
@@ -104,11 +96,11 @@ public class CoffeeHouse extends AbstractLoggingActor {
     }
 
     protected ActorRef createBarista() {
-        return context().actorOf(Barista.props(baristaPrepareCoffeeDuration, baristaAccuracy), "barista");
+        return context().actorOf(Barista.props(baristaPrepareCoffeeDuration), "barista");
     }
 
     protected ActorRef createWaiter() {
-        return context().actorOf(Waiter.props(self(), barista, waiterMaxComplaintCount), "waiter");
+        return context().actorOf(Waiter.props(self()), "waiter");
     }
 
     protected ActorRef createGuest(Coffee favoriteCoffee, int caffeineLimit) {

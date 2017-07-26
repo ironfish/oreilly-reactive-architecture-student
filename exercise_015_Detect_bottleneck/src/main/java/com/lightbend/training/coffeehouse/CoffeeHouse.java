@@ -47,10 +47,6 @@ public class CoffeeHouse extends AbstractLoggingActor {
             match(Guest.CaffeineException.class, e ->
                     SupervisorStrategy.stop()
             ).
-            match(Waiter.FrustratedException.class, (Waiter.FrustratedException e) -> {
-                barista.tell(new Barista.PrepareCoffee(e.coffee, e.guest), sender());
-                return SupervisorStrategy.restart();
-            }).
             matchAny(e -> SupervisorStrategy.restart()).build()
     );
 

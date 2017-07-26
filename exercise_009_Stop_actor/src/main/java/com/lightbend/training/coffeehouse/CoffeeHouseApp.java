@@ -65,15 +65,17 @@ public class CoffeeHouseApp implements Terminal {
     }
 
     private static Props printerProps(ActorRef coffeeHouse) {
-        return Props.create(AbstractLoggingActor.class, () -> new AbstractLoggingActor() {
-            @Override
-            public Receive createReceive() {
-                return receiveBuilder().matchAny(o -> log().info(o.toString())).build();
-            }
+        return Props.create(AbstractLoggingActor.class, () -> {
+            return new AbstractLoggingActor() {
+                @Override
+                public Receive createReceive() {
+                    return receiveBuilder().matchAny(o -> log().info(o.toString())).build();
+                }
 
-            {
-                coffeeHouse.tell("Brew Coffee", self());
-            }
+                {
+                    coffeeHouse.tell("Brew Coffee", self());
+                }
+            };
         });
     }
 
@@ -87,9 +89,7 @@ public class CoffeeHouseApp implements Terminal {
     }
 
     protected ActorRef createCoffeeHouse() {
-        // todo Get the caffeineLimit from configuration property `coffee-house.caffeine-limit`.
-        final int caffieneLimit = system.settings().config().getInt("coffee-house.caffeine-limit");
-        return system.actorOf(CoffeeHouse.props(caffieneLimit), "coffee-house");
+        return system.actorOf(CoffeeHouse.props(), "coffee-house");
     }
 
     private void commandLoop() throws IOException {

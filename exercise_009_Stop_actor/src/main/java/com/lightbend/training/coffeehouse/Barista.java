@@ -25,22 +25,11 @@ public class Barista extends AbstractLoggingActor {
                 match(PrepareCoffee.class, prepareCoffee -> {
                     Thread.sleep(this.prepareCoffeeDuration.toMillis()); // Attention: Never block a thread in "real" code!
                     sender().tell(new CoffeePrepared(prepareCoffee.coffee, prepareCoffee.guest), self());
-                }).
-                match(Letter.class, this::letterEqualsA, letter -> {
-                    sender().tell(Letter.A, self());
                 }).build();
     }
 
     public static Props props(FiniteDuration prepareCoffeeDuration) {
         return Props.create(Barista.class, () -> new Barista(prepareCoffeeDuration));
-    }
-
-    public enum Letter {
-        A, B, C, D;
-    }
-
-    public boolean letterEqualsA(Letter letter) {
-        return letter.equals(Letter.A);
     }
 
     public static final class PrepareCoffee {

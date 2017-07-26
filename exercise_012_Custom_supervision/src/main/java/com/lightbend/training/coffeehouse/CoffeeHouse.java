@@ -4,8 +4,10 @@
 
 package com.lightbend.training.coffeehouse;
 
-import akka.actor.*;
-import akka.japi.pf.DeciderBuilder;
+import akka.actor.AbstractLoggingActor;
+import akka.actor.ActorRef;
+import akka.actor.Props;
+import akka.actor.Terminated;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -37,13 +39,6 @@ public class CoffeeHouse extends AbstractLoggingActor {
 
     private final int caffeineLimit;
 
-    // todo Look up the default supervisor strategy in the `Akka` documentation.
-    // todo Caffeinated `Guest` actors should not restart.
-    // todo Apply a custom supervision strategy that stops them instead.
-    private SupervisorStrategy strategy = new OneForOneStrategy(false, DeciderBuilder.
-            match(Guest.CaffeineException.class, e -> SupervisorStrategy.stop()).
-            matchAny(e -> SupervisorStrategy.restart()).build());
-
     public CoffeeHouse(int caffeineLimit) {
         log().debug("CoffeeHouse Open");
         this.caffeineLimit = caffeineLimit;
@@ -74,11 +69,6 @@ public class CoffeeHouse extends AbstractLoggingActor {
         return Props.create(CoffeeHouse.class, () -> new CoffeeHouse(caffeineLimit));
     }
 
-    @Override
-    public SupervisorStrategy supervisorStrategy() {
-        return strategy;
-    }
-
     private boolean coffeeApproved(ApproveCoffee approveCoffee) {
         final int guestCaffeineCount = guestCaffeineBookkeeper.get(approveCoffee.guest);
         if (guestCaffeineCount < caffeineLimit) {
@@ -107,7 +97,7 @@ public class CoffeeHouse extends AbstractLoggingActor {
     }
 
     protected ActorRef createGuest(Coffee favoriteCoffee, int caffeineLimit) {
-        return context().actorOf(Guest.props(waiter, favoriteCoffee, guestFinishCoffeeDuration, caffeineLimit));
+        return getContext().actorOf(Guest.props(waiter, favoriteCoffee, guestFinishCoffeeDuration, caffeineLimit));
     }
 
     public static final class CreateGuest {

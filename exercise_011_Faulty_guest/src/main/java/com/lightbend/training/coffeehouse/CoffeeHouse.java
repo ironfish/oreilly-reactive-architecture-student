@@ -17,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
+
 public class CoffeeHouse extends AbstractLoggingActor {
 
     private final FiniteDuration baristaPrepareCoffeeDuration =
@@ -48,7 +49,7 @@ public class CoffeeHouse extends AbstractLoggingActor {
     public Receive createReceive() {
         return receiveBuilder().
                 match(CreateGuest.class, createGuest -> {
-                    final ActorRef guest = createGuest(createGuest.favoriteCoffee, createGuest.caffeineLimit);
+                    final ActorRef guest = createGuest(createGuest.favoriteCoffee);
                     addGuestToBookkeeper(guest);
                     context().watch(guest);
                 }).
@@ -96,28 +97,22 @@ public class CoffeeHouse extends AbstractLoggingActor {
         return context().actorOf(Waiter.props(self()), "waiter");
     }
 
-    // todo So that a `Guest` can be created with a `caffeineLimit`.
-    protected ActorRef createGuest(Coffee favoriteCoffee, int caffeineLimit) {
-        return getContext().actorOf(Guest.props(waiter, favoriteCoffee, guestFinishCoffeeDuration, caffeineLimit));
+    protected ActorRef createGuest(Coffee favoriteCoffee) {
+        return context().actorOf(Guest.props(waiter, favoriteCoffee, guestFinishCoffeeDuration));
     }
 
     public static final class CreateGuest {
 
         public final Coffee favoriteCoffee;
 
-        public final int caffeineLimit;
-
-        public CreateGuest(final Coffee favoriteCoffee, final int caffeineLimit) {
+        public CreateGuest(final Coffee favoriteCoffee) {
             checkNotNull(favoriteCoffee, "Favorite coffee cannot be null");
             this.favoriteCoffee = favoriteCoffee;
-            this.caffeineLimit = caffeineLimit;
         }
 
         @Override
         public String toString() {
-            return "CreateGuest{"
-                    + "favoriteCoffee=" + favoriteCoffee + ", "
-                    + "caffeineLimit=" + caffeineLimit + "}";
+            return "CreateGuest{favoriteCoffee=" + favoriteCoffee + "}";
         }
 
         @Override
@@ -125,8 +120,7 @@ public class CoffeeHouse extends AbstractLoggingActor {
             if (o == this) return true;
             if (o instanceof CreateGuest) {
                 CreateGuest that = (CreateGuest) o;
-                return (this.favoriteCoffee.equals(that.favoriteCoffee))
-                        && (this.caffeineLimit == that.caffeineLimit);
+                return this.favoriteCoffee.equals(that.favoriteCoffee);
             }
             return false;
         }
@@ -136,8 +130,6 @@ public class CoffeeHouse extends AbstractLoggingActor {
             int h = 1;
             h *= 1000003;
             h ^= favoriteCoffee.hashCode();
-            h *= 1000003;
-            h ^= caffeineLimit;
             return h;
         }
     }

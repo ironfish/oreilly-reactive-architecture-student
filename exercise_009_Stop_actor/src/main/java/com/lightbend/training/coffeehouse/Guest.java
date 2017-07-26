@@ -22,8 +22,8 @@ public class Guest extends AbstractLoggingActor {
     public Guest(ActorRef waiter, Coffee favoriteCoffee, FiniteDuration finishCoffeeDuration) {
         this.waiter = waiter;
         this.favoriteCoffee = favoriteCoffee;
-        this.finishCoffeeDuration = finishCoffeeDuration;orderFavoriteCoffee();
-
+        this.finishCoffeeDuration = finishCoffeeDuration;
+        orderFavoriteCoffee();
     }
 
     @Override
@@ -41,12 +41,6 @@ public class Guest extends AbstractLoggingActor {
 
     public static Props props(final ActorRef waiter, final Coffee favoriteCoffee, FiniteDuration finishCoffeeDuration) {
         return Props.create(Guest.class, () -> new Guest(waiter, favoriteCoffee, finishCoffeeDuration));
-    }
-
-    // todo Override the `postStop` hook to log `Goodbye!` at `info`.
-    @Override
-    public void postStop() {
-        log().info("Goodbye!");
     }
 
     private void orderFavoriteCoffee() {

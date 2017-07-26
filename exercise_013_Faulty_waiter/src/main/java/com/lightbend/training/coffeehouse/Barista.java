@@ -9,20 +9,14 @@ import akka.actor.ActorRef;
 import akka.actor.Props;
 import scala.concurrent.duration.FiniteDuration;
 
-import java.util.Random;
-
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class Barista extends AbstractLoggingActor {
 
     private final FiniteDuration prepareCoffeeDuration;
 
-    // todo Add an `accuracy` parameter of type `Int` expressing a percentage.
-    private final int accuracy;
-
-    public Barista(FiniteDuration prepareCoffeeDuration, int accuracy) {
+    public Barista(FiniteDuration prepareCoffeeDuration) {
         this.prepareCoffeeDuration = prepareCoffeeDuration;
-        this.accuracy = accuracy;
     }
 
     @Override
@@ -30,20 +24,12 @@ public class Barista extends AbstractLoggingActor {
         return receiveBuilder().
                 match(PrepareCoffee.class, prepareCoffee -> {
                     Thread.sleep(this.prepareCoffeeDuration.toMillis()); // Attention: Never block a thread in "real" code!
-                    sender().tell(new CoffeePrepared(pickCoffee(prepareCoffee.coffee), prepareCoffee.guest), self());
+                    getSender().tell(new CoffeePrepared(prepareCoffee.coffee, prepareCoffee.guest), getSelf());
                 }).build();
     }
 
-    public static Props props(FiniteDuration prepareCoffeeDuration, int accuracy) {
-        return Props.create(Barista.class, () -> new Barista(prepareCoffeeDuration, accuracy));
-    }
-
-    private Coffee pickCoffee(Coffee coffee) {
-        // todo Get a random `Int` value less than 100.
-        // todo If the random `Int` is less than `accuracy`
-        // todo Prepare the correct `Coffee`.
-        // todo Otherwise prepare a wrong one.
-        return new Random().nextInt(100) < accuracy ? coffee : Coffee.orderOther(coffee);
+    public static Props props(FiniteDuration prepareCoffeeDuration) {
+        return Props.create(Barista.class, () -> new Barista(prepareCoffeeDuration));
     }
 
     public static final class PrepareCoffee {

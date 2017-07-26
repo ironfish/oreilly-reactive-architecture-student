@@ -24,7 +24,7 @@ public class Barista extends AbstractLoggingActor {
         return receiveBuilder().
                 match(PrepareCoffee.class, prepareCoffee -> {
                     Thread.sleep(this.prepareCoffeeDuration.toMillis()); // Attention: Never block a thread in "real" code!
-                    getSender().tell(new CoffeePrepared(prepareCoffee.coffee, prepareCoffee.guest), getSelf());
+                    sender().tell(new CoffeePrepared(prepareCoffee.coffee, prepareCoffee.guest), self());
                 }).build();
     }
 
