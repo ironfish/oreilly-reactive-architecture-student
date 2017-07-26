@@ -22,8 +22,8 @@ public class Guest extends AbstractLoggingActor {
     public Guest(ActorRef waiter, Coffee favoriteCoffee, FiniteDuration finishCoffeeDuration) {
         this.waiter = waiter;
         this.favoriteCoffee = favoriteCoffee;
-        this.finishCoffeeDuration = finishCoffeeDuration;
-        orderFavoriteCoffee();
+        this.finishCoffeeDuration = finishCoffeeDuration;orderFavoriteCoffee();
+
     }
 
     @Override

@@ -17,16 +17,12 @@ public class Guest extends AbstractLoggingActor {
 
     private final FiniteDuration finishCoffeeDuration;
 
-    // todo Add a `caffeineLimit` parameter.
-    private final int caffeineLimit;
-
     private int coffeeCount = 0;
 
-    public Guest(ActorRef waiter, Coffee favoriteCoffee, FiniteDuration finishCoffeeDuration, int caffeineLimit) {
+    public Guest(ActorRef waiter, Coffee favoriteCoffee, FiniteDuration finishCoffeeDuration) {
         this.waiter = waiter;
         this.favoriteCoffee = favoriteCoffee;
         this.finishCoffeeDuration = finishCoffeeDuration;
-        this.caffeineLimit = caffeineLimit;
         orderFavoriteCoffee();
     }
 
@@ -38,19 +34,13 @@ public class Guest extends AbstractLoggingActor {
                     log().info("Enjoying my {} yummy {}!", coffeeCount, coffeeServed.coffee);
                     scheduleCoffeeFinished();
                 }).
-                // todo Upon receiving `CoffeeFinished` throw the `CaffeineException` if `coffeeCount` exceeds `caffeineLimit`.
-                match(CoffeeFinished.class, coffeeFinished -> coffeeCount > this.caffeineLimit, coffeeFinished -> {
-                    throw new CaffeineException();
-                }).
                 match(CoffeeFinished.class, coffeeFinished ->
                         orderFavoriteCoffee()
                 ).build();
     }
 
-    public static Props props(final ActorRef waiter, final Coffee favoriteCoffee,
-                              final FiniteDuration finishCoffeeDuration, final int caffeineLimit) {
-        return Props.create(Guest.class,
-                () -> new Guest(waiter, favoriteCoffee, finishCoffeeDuration, caffeineLimit));
+    public static Props props(final ActorRef waiter, final Coffee favoriteCoffee, FiniteDuration finishCoffeeDuration) {
+        return Props.create(Guest.class, () -> new Guest(waiter, favoriteCoffee, finishCoffeeDuration));
     }
 
     @Override
@@ -67,18 +57,10 @@ public class Guest extends AbstractLoggingActor {
                 CoffeeFinished.Instance, context().dispatcher(), self());
     }
 
-    // todo Create new exception called `CaffeineException` by extending `IllegalStateException`.
-    public static final class CaffeineException extends IllegalStateException {
-        static final long serialVersionUID = 1;
-
-        public CaffeineException() {
-            super("Too much caffeine!");
-        }
-    }
-
     public static final class CoffeeFinished {
 
-        public static final CoffeeFinished Instance = new CoffeeFinished();
+        public static final CoffeeFinished Instance =
+                new CoffeeFinished();
 
         private CoffeeFinished() {
         }

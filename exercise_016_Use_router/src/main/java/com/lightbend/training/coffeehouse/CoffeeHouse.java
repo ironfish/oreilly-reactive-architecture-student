@@ -6,7 +6,6 @@ package com.lightbend.training.coffeehouse;
 
 import akka.actor.*;
 import akka.japi.pf.DeciderBuilder;
-import akka.routing.FromConfig;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -78,8 +77,7 @@ public class CoffeeHouse extends AbstractLoggingActor {
                 match(Terminated.class, terminated -> {
                     log().info("Thanks, {}, for being our guest!", terminated.getActor());
                     removeGuestFromBookkeeper(terminated.getActor());
-                }).
-                matchAny(this::unhandled).build();
+                }).build();
     }
 
     public static Props props(int caffeineLimit) {
@@ -110,10 +108,8 @@ public class CoffeeHouse extends AbstractLoggingActor {
         log().debug("Removed guest {} from bookkeeper", guest);
     }
 
-    // todo Use an externally configured `round-robin` pool router.
     protected ActorRef createBarista() {
-        return context().actorOf(FromConfig.getInstance().props(
-                Barista.props(baristaPrepareCoffeeDuration, baristaAccuracy)), "barista");
+        return context().actorOf(Barista.props(baristaPrepareCoffeeDuration, baristaAccuracy), "barista");
     }
 
     protected ActorRef createWaiter() {

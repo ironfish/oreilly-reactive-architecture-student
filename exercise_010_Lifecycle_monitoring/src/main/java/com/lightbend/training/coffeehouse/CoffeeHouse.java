@@ -7,18 +7,18 @@ package com.lightbend.training.coffeehouse;
 import akka.actor.AbstractLoggingActor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
-import akka.actor.Terminated;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 
 public class CoffeeHouse extends AbstractLoggingActor {
+
 
     private final FiniteDuration baristaPrepareCoffeeDuration =
             Duration.create(
@@ -36,7 +36,7 @@ public class CoffeeHouse extends AbstractLoggingActor {
     private final ActorRef waiter =
             createWaiter();
 
-    private final Map<ActorRef, Integer> guestCaffeineBookkeeper = new ConcurrentHashMap<>();
+    private final Map<ActorRef, Integer> guestCaffeineBookkeeper = new HashMap<>();
 
     private final int caffeineLimit;
 
@@ -51,20 +51,14 @@ public class CoffeeHouse extends AbstractLoggingActor {
                 match(CreateGuest.class, createGuest -> {
                     final ActorRef guest = createGuest(createGuest.favoriteCoffee);
                     addGuestToBookkeeper(guest);
-                    context().watch(guest);
                 }).
-                match(ApproveCoffee.class, this::coffeeApproved, approveCoffee ->
-                        barista.forward(new Barista.PrepareCoffee(approveCoffee.coffee, approveCoffee.guest), context())
-                ).
+                match(ApproveCoffee.class, this::coffeeApproved, approveCoffee -> {
+                    barista.forward(new Barista.PrepareCoffee(approveCoffee.coffee, approveCoffee.guest), context());
+                    log().info("Guest, {}, caffeine count incremented", approveCoffee.guest.path().name());
+                }).
                 match(ApproveCoffee.class, approveCoffee -> {
                     log().info("Sorry, {}, but you have reached your limit.", approveCoffee.guest.path().name());
-                    context().stop(approveCoffee.guest);
-                }).
-                // todo When the `Guest` terminates, remove the `Guest` from caffeineLimit bookkeeping.
-                match(Terminated.class, terminated -> {
-                    // todo Log "Thanks {guest}, for being our guest!" at `info`.
-                    log().info("Thanks, {}, for being our guest!", terminated.getActor());
-                    removeGuestFromBookkeeper(terminated.getActor());
+                    getContext().stop(approveCoffee.guest);
                 }).build();
     }
 
@@ -86,21 +80,16 @@ public class CoffeeHouse extends AbstractLoggingActor {
         log().debug("Guest {} added to bookkeeper", guest);
     }
 
-    private void removeGuestFromBookkeeper(ActorRef guest) {
-        guestCaffeineBookkeeper.remove(guest);
-        log().debug("Removed guest {} from bookkeeper", guest);
-    }
-
     protected ActorRef createBarista() {
-        return context().actorOf(Barista.props(baristaPrepareCoffeeDuration), "barista");
+        return getContext().actorOf(Barista.props(baristaPrepareCoffeeDuration), "barista");
     }
 
     protected ActorRef createWaiter() {
-        return context().actorOf(Waiter.props(self()), "waiter");
+        return getContext().actorOf(Waiter.props(getSelf()), "waiter");
     }
 
     protected ActorRef createGuest(Coffee favoriteCoffee) {
-        return context().actorOf(Guest.props(waiter, favoriteCoffee, guestFinishCoffeeDuration));
+        return getContext().actorOf(Guest.props(waiter, favoriteCoffee, guestFinishCoffeeDuration));
     }
 
     public static final class CreateGuest {
@@ -142,39 +131,35 @@ public class CoffeeHouse extends AbstractLoggingActor {
 
         public final ActorRef guest;
 
-        public ApproveCoffee(final Coffee coffee, final ActorRef guest) {
-            checkNotNull(coffee, "Coffee cannot be null");
-            checkNotNull(guest, "Guest cannot be null");
+        public ApproveCoffee(Coffee coffee, ActorRef guest) {
             this.coffee = coffee;
             this.guest = guest;
         }
 
         @Override
         public String toString() {
-            return "ApproveCoffee{"
-                    + "coffee=" + coffee + ", "
-                    + "guest=" + guest + "}";
+            return "ApproveCoffee{" +
+                    "coffee=" + coffee +
+                    ", guest=" + guest +
+                    '}';
         }
 
         @Override
         public boolean equals(Object o) {
-            if (o == this) return true;
-            if (o instanceof ApproveCoffee) {
-                ApproveCoffee that = (ApproveCoffee) o;
-                return (this.coffee.equals(that.coffee))
-                        && (this.guest.equals(that.guest));
-            }
-            return false;
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            ApproveCoffee that = (ApproveCoffee) o;
+
+            if (coffee != null ? !coffee.equals(that.coffee) : that.coffee != null) return false;
+            return guest != null ? guest.equals(that.guest) : that.guest == null;
         }
 
         @Override
         public int hashCode() {
-            int h = 1;
-            h *= 1000003;
-            h ^= coffee.hashCode();
-            h *= 1000003;
-            h ^= guest.hashCode();
-            return h;
+            int result = coffee != null ? coffee.hashCode() : 0;
+            result = 31 * result + (guest != null ? guest.hashCode() : 0);
+            return result;
         }
     }
 }

@@ -10,15 +10,10 @@ import akka.actor.Props;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-
 public class CoffeeHouse extends AbstractLoggingActor {
-
 
     private final FiniteDuration baristaPrepareCoffeeDuration =
             Duration.create(
@@ -36,70 +31,32 @@ public class CoffeeHouse extends AbstractLoggingActor {
     private final ActorRef waiter =
             createWaiter();
 
-    private final Map<ActorRef, Integer> guestCaffeineBookkeeper = new HashMap<>();
-
-    // todo Add a `caffeineLimit` parameter of type `int`.
-    private final int caffeineLimit;
-
-    public CoffeeHouse(int caffeineLimit) {
+    public CoffeeHouse() {
         log().debug("CoffeeHouse Open");
-        this.caffeineLimit = caffeineLimit;
     }
 
     @Override
     public Receive createReceive() {
         return receiveBuilder().
-                match(CreateGuest.class, createGuest -> {
-                    final ActorRef guest = createGuest(createGuest.favoriteCoffee);
-                    // todo Add `guest` to `guestBook` with a caffeine count of 0.
-                    addGuestToBookkeeper(guest);
-                }).
-                // todo Look at the current `Guest` caffeineLimit.
-                // todo If less than `caffeineLimit`
-                // todo Send `PrepareCoffee` to the `Barista`.
-                // todo Log `Guest {guest} caffeine count incremented.` at `info`.
-                match(ApproveCoffee.class, this::coffeeApproved, approveCoffee -> {
-                    barista.forward(new Barista.PrepareCoffee(approveCoffee.coffee, approveCoffee.guest), context());
-                    log().info("Guest, {}, caffeine count incremented", approveCoffee.guest.path().name());
-                }).
-                match(ApproveCoffee.class, approveCoffee -> {
-                    // todo Log `Sorry, {guest}, but you have reached your limit.` at `info`.
-                    log().info("Sorry, {}, but you have reached your limit.", approveCoffee.guest.path().name());
-                    // todo Stop the `Guest`.
-                    getContext().stop(approveCoffee.guest);
-                }).build();
+                match(CreateGuest.class, createGuest ->
+                        createGuest(createGuest.favoriteCoffee)
+                ).build();
     }
 
-    public static Props props(int caffeineLimit) {
-        return Props.create(CoffeeHouse.class, () -> new CoffeeHouse(caffeineLimit));
-    }
-
-    private boolean coffeeApproved(ApproveCoffee approveCoffee) {
-        final int guestCaffeineCount = guestCaffeineBookkeeper.get(approveCoffee.guest);
-        if (guestCaffeineCount < caffeineLimit) {
-            guestCaffeineBookkeeper.put(approveCoffee.guest, guestCaffeineCount + 1);
-            return true;
-        }
-        return false;
-    }
-
-    private void addGuestToBookkeeper(ActorRef guest) {
-        guestCaffeineBookkeeper.put(guest, 0);
-        // todo Log `Guest {guest} added to book` at `debug`.
-        log().debug("Guest {} added to bookkeeper", guest);
+    public static Props props() {
+        return Props.create(CoffeeHouse.class, CoffeeHouse::new);
     }
 
     protected ActorRef createBarista() {
-        return getContext().actorOf(Barista.props(baristaPrepareCoffeeDuration), "barista");
+        return context().actorOf(Barista.props(baristaPrepareCoffeeDuration), "barista");
     }
 
-    // todo When creating the `Waiter` pass along `self()` instead of `Barista`.
     protected ActorRef createWaiter() {
-        return getContext().actorOf(Waiter.props(getSelf()), "waiter");
+        return context().actorOf(Waiter.props(barista), "waiter");
     }
 
-    protected ActorRef createGuest(Coffee favoriteCoffee) {
-        return getContext().actorOf(Guest.props(waiter, favoriteCoffee, guestFinishCoffeeDuration));
+    protected void createGuest(Coffee favoriteCoffee) {
+        context().actorOf(Guest.props(waiter, favoriteCoffee, guestFinishCoffeeDuration));
     }
 
     public static final class CreateGuest {
@@ -132,45 +89,6 @@ public class CoffeeHouse extends AbstractLoggingActor {
             h *= 1000003;
             h ^= favoriteCoffee.hashCode();
             return h;
-        }
-    }
-
-    // todo Create an `ApproveCoffee` message with parameters of `coffee` type `Coffee` and `guest` type `ActorRef`.
-    public static final class ApproveCoffee {
-
-        public final Coffee coffee;
-
-        public final ActorRef guest;
-
-        public ApproveCoffee(Coffee coffee, ActorRef guest) {
-            this.coffee = coffee;
-            this.guest = guest;
-        }
-
-        @Override
-        public String toString() {
-            return "ApproveCoffee{" +
-                    "coffee=" + coffee +
-                    ", guest=" + guest +
-                    '}';
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            ApproveCoffee that = (ApproveCoffee) o;
-
-            if (coffee != null ? !coffee.equals(that.coffee) : that.coffee != null) return false;
-            return guest != null ? guest.equals(that.guest) : that.guest == null;
-        }
-
-        @Override
-        public int hashCode() {
-            int result = coffee != null ? coffee.hashCode() : 0;
-            result = 31 * result + (guest != null ? guest.hashCode() : 0);
-            return result;
         }
     }
 }
